@@ -6,13 +6,20 @@ workflows:
     environment:
       java: 17
     scripts:
-      - name: Set SDK path
-        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Unpack project.zip
+        script: |
+          mkdir -p "$CM_BUILD_DIR/proj"
+          unzip -q "$CM_BUILD_DIR/project.zip" -d "$CM_BUILD_DIR/proj"
+          ls -la "$CM_BUILD_DIR/proj"
+      - name: Set Android SDK path
+        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/proj/local.properties"
       - name: Install Gradle 8.7
         script: |
           curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp
       - name: Build debug APK
-        script: /tmp/gradle-8.7/bin/gradle :app:assembleDebug
+        script: |
+          cd "$CM_BUILD_DIR/proj"
+          /tmp/gradle-8.7/bin/gradle :app:assembleDebug --no-daemon
     artifacts:
-      - app/build/outputs/apk/debug/*.apk
+      - proj/app/build/outputs/apk/debug/*.apk
